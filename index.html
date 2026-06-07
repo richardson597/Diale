@@ -1,0 +1,1014 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Premium USSD Interface</title>
+    <style>
+        :root {
+            --primary-blue: #1a73e8;
+            --success-green: #0b9d62;
+            --samsung-green: #00b074;
+            --bg-white: #ffffff;
+            --text-dark: #000000;
+            --text-grey: #7c7c7c;
+            --kb-bg: #e2e4e7;
+            --kb-key-bg: #ffffff;
+            --kb-key-dark: #bcc1c8;
+        }
+
+        body { 
+            background-color: var(--bg-white); 
+            margin: 0; 
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+            color: var(--text-dark); 
+            height: 100vh; 
+            display: flex; 
+            flex-direction: column; 
+            overflow: hidden; 
+            position: relative;
+            user-select: none;
+            -webkit-user-select: none;
+        }
+        
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 10px 24px 4px 24px;
+            font-size: 13.5px;
+            font-weight: 500;
+            color: #000000;
+            background-color: var(--bg-white);
+            letter-spacing: 0.2px;
+        }
+
+        .status-left {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .status-icons {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .signal-bars {
+            display: flex;
+            align-items: flex-end;
+            gap: 2px;
+            width: 17px;
+            height: 11px;
+        }
+        .bar {
+            width: 2.5px;
+            background-color: #e0e0e0;
+            border-radius: 0.5px;
+        }
+        .bar.lit {
+            background-color: #000000;
+        }
+        .bar1 { height: 25%; }
+        .bar2 { height: 50%; }
+        .bar3 { height: 75%; }
+        .bar4 { height: 100%; }
+
+        .battery-container {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        .battery-body {
+            width: 22px;
+            height: 12px;
+            border: 1px solid #000000;
+            border-radius: 2.5px;
+            padding: 1px;
+            box-sizing: border-box;
+            display: flex;
+            align-items: center;
+        }
+        .battery-level {
+            height: 100%;
+            width: 30%;
+            background-color: #000000;
+            border-radius: 1px;
+        }
+        .battery-cap {
+            width: 1.5px;
+            height: 4px;
+            background-color: #000000;
+            border-radius: 0 1px 1px 0;
+            margin-left: -0.5px;
+        }
+
+        .lte-text {
+            font-size: 10px;
+            font-weight: 800;
+            transform: scale(0.9);
+            margin-right: -2px;
+            letter-spacing: -0.2px;
+        }
+
+        .top-nav { 
+            display: flex; 
+            justify-content: space-between; 
+            align-items: center; 
+            padding: 14px 24px 10px 24px; 
+            position: relative;
+        }
+        .top-left { font-weight: 400; font-size: 28px; color: var(--text-dark); }
+        .top-right { display: flex; gap: 24px; align-items: center; }
+        .search-icon { cursor: pointer; font-size: 22px; padding: 4px; opacity: 0.85; }
+        .three-dots { cursor: pointer; padding: 4px 8px; font-size: 24px; opacity: 0.85; }
+
+        .options-menu {
+            display: none;
+            position: absolute;
+            top: 55px;
+            right: 16px;
+            background: #ffffff;
+            border-radius: 24px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.08), 0 2px 12px rgba(0, 0, 0, 0.04);
+            border: 1px solid rgba(0, 0, 0, 0.03);
+            width: 220px;
+            z-index: 500;
+            padding: 10px 0;
+            box-sizing: border-box;
+            transform-origin: top right;
+            animation: menuFadeIn 0.18s ease-out forwards;
+        }
+        @keyframes menuFadeIn {
+            from { opacity: 0; transform: scale(0.93); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .menu-item {
+            padding: 14px 24px;
+            font-size: 18px;
+            font-weight: 400;
+            color: #000000;
+            cursor: pointer;
+        }
+        .menu-item:active { background-color: #f5f5f5; }
+
+        .spacer { flex: 1; min-height: 20px; } 
+
+        #display { 
+            font-size: 42px; 
+            text-align: center; 
+            min-height: 50px; 
+            margin-bottom: 20px; 
+            font-weight: 300; 
+            word-break: break-all; 
+            padding: 0 30px;
+            color: var(--text-dark);
+        }
+        
+        .grid { 
+            display: grid; 
+            grid-template-columns: 1fr 1fr 1fr; 
+            width: 100%; 
+            max-width: 360px; 
+            margin: 0 auto; 
+            row-gap: 32px;
+        }
+        .k { 
+            height: 76px; 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            cursor: pointer; 
+            background: none;
+            border: none;
+        }
+        .k:active { 
+            background-color: rgba(0, 0, 0, 0.04);
+            border-radius: 50%;
+            width: 76px;
+            margin: 0 auto;
+        }
+        .n { font-size: 44px; font-weight: 300; color: #000; line-height: 1; }
+        .l { font-size: 10.5px; color: #a2a2a2; text-transform: uppercase; margin-top: 6px; letter-spacing: 0.5px; font-weight: 400; }
+
+        #action-row { 
+            display: flex; 
+            justify-content: center; 
+            align-items: center; 
+            width: 100%; 
+            margin: 45px auto 35px auto; 
+            max-width: 360px; 
+            position: relative;
+        }
+
+        .c-btn { 
+            width: 78px; 
+            height: 78px; 
+            background-color: var(--samsung-green); 
+            border-radius: 50%; 
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            border: none;
+            cursor: pointer;
+        }
+        .c-btn:active { opacity: 0.9; }
+
+        #backspace { 
+            position: absolute;
+            right: 40px;
+            font-size: 26px; 
+            color: #7c7c7c; 
+            cursor: pointer;
+            width: 30px;
+            text-align: center;
+        }
+
+        .bottom-nav-bar {
+            display: flex;
+            justify-content: space-around;
+            border-top: 1px solid #f8f8f8;
+            padding: 14px 0 20px 0;
+            background-color: #ffffff;
+        }
+        .nav-item {
+            font-size: 16.5px;
+            font-weight: 500;
+            color: var(--text-grey);
+            cursor: pointer;
+            text-align: center;
+            padding: 4px 12px;
+        }
+        .nav-item.active {
+            color: var(--samsung-green);
+            border-bottom: none;
+        }
+
+        .system-footer {
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            padding: 10px 0 14px 0;
+            background-color: #ffffff;
+        }
+        .sys-key {
+            width: 20px;
+            height: 20px;
+            opacity: 0.6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 300;
+        }
+
+        #search-panel {
+            display: none;
+            position: fixed;
+            top: 36px; 
+            left: 0;
+            width: 100%;
+            height: calc(100% - 36px);
+            background-color: #ffffff;
+            z-index: 800;
+            flex-direction: column;
+        }
+        .search-header-row {
+            display: flex;
+            align-items: center;
+            padding: 10px 16px;
+            gap: 12px;
+        }
+        .back-arrow-btn {
+            font-size: 24px;
+            cursor: pointer;
+            color: #333333;
+            padding: 4px;
+        }
+        .search-pill-input {
+            flex: 1;
+            background-color: #f1f3f4;
+            border-radius: 24px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            padding: 0 16px;
+            justify-content: space-between;
+        }
+        .search-placeholder-wrapper {
+            display: flex;
+            align-items: center;
+            gap: 2px;
+        }
+        .search-placeholder-text {
+            color: #757575;
+            font-size: 18px;
+        }
+        .search-blinking-cursor {
+            width: 2px;
+            height: 20px;
+            background-color: var(--samsung-green);
+            animation: cursorBlink 1s infinite;
+        }
+        @keyframes cursorBlink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0; }
+        }
+        .mic-icon {
+            font-size: 18px;
+            color: #333333;
+        }
+        .search-center-body {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #6a6a6a;
+            font-size: 22px;
+            font-weight: 400;
+        }
+
+        .keyboard-layer {
+            background-color: var(--kb-bg);
+            padding: 6px 4px 10px 4px;
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+        .kb-toolbar {
+            display: flex;
+            justify-content: space-around;
+            padding: 4px 0 8px 0;
+            color: #5f6368;
+        }
+        .kb-row {
+            display: flex;
+            justify-content: center;
+            gap: 4.5px;
+            width: 100%;
+        }
+        .kb-key {
+            flex: 1;
+            height: 46px;
+            background-color: var(--kb-key-bg);
+            border-radius: 5px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            color: #000000;
+            box-shadow: 0px 1px 1px rgba(0,0,0,0.15);
+        }
+        .kb-key:active { opacity: 0.6; }
+        .kb-key.dark-key {
+            background-color: var(--kb-key-dark);
+            flex: 1.3;
+        }
+        .kb-key.space-key {
+            flex: 5;
+        }
+
+        #screen-dimmer {
+            display: none; 
+            position: fixed; 
+            top: 0; left: 0; 
+            width: 100%; height: 100%;
+            background-color: rgba(0, 0, 0, 0.45); 
+            z-index: 1000;
+            justify-content: center; 
+            align-items: center;
+        }
+
+        /* --- COMPACT POPUP BOX CHANGES --- */
+        .popup-box {
+            background-color: #ffffff; 
+            border-radius: 24px; 
+            padding: 24px 22px 16px 22px; /* Tighter internal padding */
+            display: none; 
+            width: 91%; 
+            max-width: 375px;
+            box-shadow: 0 4px 25px rgba(0, 0, 0, 0.2);
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        @keyframes popIn {
+            from { opacity: 0; transform: scale(0.96); }
+            to { opacity: 1; transform: scale(1); }
+        }
+        .popup-active { display: flex !important; animation: popIn 0.15s ease-out forwards; }
+
+        .ussd-spinner { 
+            width: 28px; height: 28px; 
+            border: 3px solid #f3f3f3; 
+            border-top: 3px solid var(--primary-blue); 
+            border-radius: 50%; 
+            animation: spin 0.8s linear infinite; 
+            margin-right: 15px; 
+        }
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+
+        .pin-header { 
+            font-size: 16.5px; 
+            line-height: 1.45; 
+            color: var(--text-dark); 
+            margin-bottom: 20px; 
+            text-align: left;
+        }
+        
+        /* Shorter spacing layout below text content */
+        .momo-menu-text { 
+            font-size: 16.5px; 
+            line-height: 1.42; 
+            color: var(--text-dark); 
+            margin-bottom: 22px; /* Decreased heavily from 35px so box sits short */
+            white-space: pre-line; 
+            text-align: left;
+            font-weight: 400;
+        }
+        
+        /* Thin indicator input bar pushed up neatly */
+        .pin-line { 
+            border: none; 
+            border-bottom: 1.5px solid #4ca1ff; 
+            width: 100%; 
+            outline: none; 
+            font-size: 18px; 
+            padding: 2px 0; 
+            margin-bottom: 20px; /* Reduced to pull buttons closer */
+            color: var(--text-dark);
+            box-sizing: border-box;
+            border-radius: 0;
+        }
+        
+        input[type="password"].pin-line {
+            letter-spacing: 4px;
+            font-size: 24px;
+        }
+
+        .pin-actions { 
+            display: flex; 
+            width: calc(100% + 44px); 
+            margin-left: -22px; 
+            margin-bottom: -16px; 
+            border-top: 1px solid #eaeaea; 
+            align-items: center;
+        }
+        .pin-btn { 
+            flex: 1; 
+            padding: 14px 0; 
+            border: none; 
+            background: none; 
+            font-size: 16px; 
+            color: #1a73e8; 
+            font-weight: 500; 
+            cursor: pointer;
+            text-align: center;
+            text-transform: none;
+        }
+        .pin-btn:active { background-color: #f7f9fa; }
+        .btn-divider {
+            width: 1px;
+            height: 24px;
+            background-color: #eaeaea;
+        }
+
+        .msg-text { font-size: 16px; line-height: 1.6; color: var(--text-dark); margin-bottom: 24px; text-align: left; }
+        .ok-text-btn { 
+            padding: 14px 0; 
+            background: none; 
+            color: #1a73e8; 
+            border: none; 
+            font-weight: 500; 
+            font-size: 16px; 
+            cursor: pointer;
+            border-top: 1px solid #eaeaea;
+            margin: 0 -22px -16px -22px;
+            width: calc(100% + 44px);
+        }
+    </style>
+</head>
+<body>
+
+    <div class="status-bar">
+        <div class="status-left">
+            <span>9:18</span>
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="#000" style="margin-left: 2px; opacity: 0.8;">
+                <path d="M20 2H4c-1.1 0-1.99.9-1.99 2L2 22l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+            </svg>
+        </div>
+        <div class="status-icons">
+            <svg width="13" height="13" viewBox="0 0 24 24" fill="#000" style="opacity: 0.8;">
+                <path d="M16 19H8V5h8v14zm2-17H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2z"/>
+            </svg>
+            <div class="lte-text">3G</div>
+            <div class="signal-bars">
+                <div class="bar bar1 lit"></div>
+                <div class="bar bar2 lit"></div>
+                <div class="bar bar3 lit"></div>
+                <div class="bar bar4"></div>
+            </div>
+            <div class="battery-container">
+                <span style="font-size: 13px; font-weight: 500;">29%</span>
+                <div class="battery-body">
+                    <div class="battery-level" style="width: 29%;"></div>
+                </div>
+                <div class="battery-cap"></div>
+            </div>
+        </div>
+    </div>
+
+    <div id="dialer-app-content" style="display: flex; flex-direction: column; flex: 1;">
+        <div class="top-nav">
+            <div class="top-left">Phone</div>
+            <div class="top-right">
+                <span class="search-icon" onclick="openSearchPanel(event)">🔍</span>
+                <span class="three-dots" onclick="toggleOptionsMenu(event)">⋮</span>
+            </div>
+
+            <div id="options-menu" class="options-menu">
+                <div class="menu-item" onclick="handleMenuClick('Show me')">Show me</div>
+                <div class="menu-item" onclick="handleMenuClick('Speed dial numbers')">Speed dial numbers</div>
+                <div class="menu-item" onclick="handleMenuClick('Open to keypad')">Open to keypad</div>
+                <div class="menu-item" onclick="handleMenuClick('Settings')">Settings</div>
+            </div>
+        </div>
+
+        <div class="spacer"></div>
+        <div id="display"></div>
+
+        <div class="grid">
+            <div class="k" onclick="p('1')"><span class="n">1</span><span class="l">&nbsp;</span></div>
+            <div class="k" onclick="p('2')"><span class="n">2</span><span class="l">ABC</span></div>
+            <div class="k" onclick="p('3')"><span class="n">3</span><span class="l">DEF</span></div>
+            <div class="k" onclick="p('4')"><span class="n">4</span><span class="l">GHI</span></div>
+            <div class="k" onclick="p('5')"><span class="n">5</span><span class="l">JKL</span></div>
+            <div class="k" onclick="p('6')"><span class="n">6</span><span class="l">MNO</span></div>
+            <div class="k" onclick="p('7')"><span class="n">7</span><span class="l">PQRS</span></div>
+            <div class="k" onclick="p('8')"><span class="n">8</span><span class="l">TUV</span></div>
+            <div class="k" onclick="p('9')"><span class="n">9</span><span class="l">WXYZ</span></div>
+            <div class="k" onclick="p('*')"><span class="n">*</span><span class="l">&nbsp;</span></div>
+            <div class="k" onclick="p('0')"><span class="n">0</span><span class="l">+</span></div>
+            <div class="k" onclick="p('#')"><span class="n">#</span><span class="l">&nbsp;</span></div>
+        </div>
+
+        <div id="action-row">
+            <button class="c-btn" onclick="handleAction()">
+                <svg width="30" height="30" viewBox="0 0 24 24" fill="white"><path d="M20 15.5c-1.2 0-2.4-.2-3.6-.6-.3-.1-.7 0-1 .2l-2.2 2.2c-2.8-1.4-5.1-3.8-6.6-6.6l2.2-2.2c.3-.3.4-.7.2-1-.3-1.1-.5-2.3-.5-3.5 0-.6-.4-1-1-1H4c-.6 0-1 .4-1 1 0 9.4 7.6 17 17 17 .6 0 1-.4 1-1v-3.5c0-.6-.4-1-1-1z"/></svg>
+            </button>
+            <div id="backspace" onclick="del()" style="visibility:hidden;">⌫</div>
+        </div>
+
+        <div class="bottom-nav-bar">
+            <div class="nav-item active">Keypad</div>
+            <div class="nav-item">Recents</div>
+            <div class="nav-item">Contacts</div>
+        </div>
+    </div>
+
+    <div id="search-panel">
+        <div class="search-header-row">
+            <div class="back-arrow-btn" onclick="closeSearchPanel()">&lt;</div>
+            <div class="search-pill-input">
+                <div class="search-placeholder-wrapper">
+                    <span class="search-placeholder-text">Search</span>
+                    <div class="search-blinking-cursor"></div>
+                </div>
+                <div class="mic-icon">🎙️</div>
+            </div>
+        </div>
+        <div class="search-center-body">
+            No recent searches
+        </div>
+        
+        <div class="keyboard-layer">
+            <div class="kb-toolbar">
+                <span>😊</span><span>📋</span><span>GIF</span><span>🎙️</span><span>⚙️</span><span>•••</span>
+            </div>
+            <div class="kb-row">
+                <div class="kb-key">1</div><div class="kb-key">2</div><div class="kb-key">3</div><div class="kb-key">4</div><div class="kb-key">5</div>
+                <div class="kb-key">6</div><div class="kb-key">7</div><div class="kb-key">8</div><div class="kb-key">9</div><div class="kb-key">0</div>
+            </div>
+            <div class="kb-row">
+                <div class="kb-key">q</div><div class="kb-key">w</div><div class="kb-key">e</div><div class="kb-key">r</div><div class="kb-key">t</div>
+                <div class="kb-key">y</div><div class="kb-key">u</div><div class="kb-key">i</div><div class="kb-key">o</div><div class="kb-key">p</div>
+            </div>
+            <div class="kb-row">
+                <div class="kb-key">a</div><div class="kb-key">s</div><div class="kb-key">d</div><div class="kb-key">f</div><div class="kb-key">g</div>
+                <div class="kb-key">h</div><div class="kb-key">j</div><div class="kb-key">k</div><div class="kb-key">l</div>
+            </div>
+            <div class="kb-row">
+                <div class="kb-key dark-key">⇧</div><div class="kb-key">z</div><div class="kb-key">x</div><div class="kb-key">c</div>
+                <div class="kb-key">v</div><div class="kb-key">b</div><div class="kb-key">n</div><div class="kb-key">m</div>
+                <div class="kb-key dark-key">⌫</div>
+            </div>
+            <div class="kb-row">
+                <div class="kb-key dark-key">!#1</div><div class="kb-key dark-key">En/Fr</div><div class="kb-key">,</div>
+                <div class="kb-key space-key">━</div><div class="kb-key">.</div><div class="kb-key dark-key" style="color: var(--primary-blue);">🔍</div>
+            </div>
+        </div>
+    </div>
+
+    <div class="system-footer">
+        <div class="sys-key" style="letter-spacing: -1px; font-weight: bold;">|||</div>
+        <div class="sys-key" style="border: 2px solid rgba(0,0,0,0.4); border-radius: 6px; width: 14px; height: 14px;"></div>
+        <div class="sys-key" style="font-size: 18px;">&lt;</div>
+    </div>
+
+    <div id="screen-dimmer">
+        <div id="ussd-loading" class="popup-box" style="align-items: center; flex-direction: row; padding: 24px;">
+            <div class="ussd-spinner"></div>
+            <div id="ussd-text" style="font-size:16px">USSD code running...</div>
+        </div>
+
+        <div id="pin-box" class="popup-box">
+            <div id="withdrawal-text" class="pin-header"></div>
+            <input type="password" id="pin-field" class="pin-line" maxlength="5" inputmode="numeric">
+            <div class="pin-actions">
+                <button class="pin-btn" onclick="closeAll()">Cancel</button>
+                <div class="btn-divider"></div>
+                <button class="pin-btn" onclick="processPin()">Send</button>
+            </div>
+        </div>
+
+        <div id="momo-main-menu" class="popup-box">
+            <div class="momo-menu-text">MTN MoMo
+1) Transfert d argent
+2) Payer factures/services
+3) Achat Credit/Forfaits
+4) MoMoPay
+5) Operations bancaires
+6) Pret
+7) Mon Compte
+8) Aide
+9) Promo</div>
+            <input type="text" id="momo-menu-field" class="pin-line" maxlength="2" inputmode="numeric">
+            <div class="pin-actions">
+                <button class="pin-btn" onclick="closeAll()">Cancel</button>
+                <div class="btn-divider"></div>
+                <button class="pin-btn" onclick="handleMomoSelection()">Send</button>
+            </div>
+        </div>
+
+        <div id="momo-account-menu" class="popup-box">
+            <div class="momo-menu-text">Mon Compte
+1) Solde/Dernieres transactions
+2) Changer de code PIN
+3) Code PIN oublie?
+4) Gerer les favoris
+5) Annuler transaction
+6) Changer de langue
+7) Self
+00) Suivant</div>
+            <input type="text" id="momo-account-field" class="pin-line" maxlength="2" inputmode="numeric">
+            <div class="pin-actions">
+                <button class="pin-btn" onclick="closeAll()">Cancel</button>
+                <div class="btn-divider"></div>
+                <button class="pin-btn" onclick="handleAccountSelection()">Send</button>
+            </div>
+        </div>
+
+        <div id="momo-balance-menu" class="popup-box">
+            <div class="momo-menu-text">Solde/Dernieres transactions
+1) Consulter le solde du compte
+2) Dernieres transactions
+3) Solde des forfaits Continent
+0) Retour</div>
+            <input type="text" id="momo-balance-field" class="pin-line" maxlength="2" inputmode="numeric">
+            <div class="pin-actions">
+                <button class="pin-btn" onclick="closeAll()">Cancel</button>
+                <div class="btn-divider"></div>
+                <button class="pin-btn" onclick="handleBalanceSelection()">Send</button>
+            </div>
+        </div>
+
+        <div id="momo-transactions-pin" class="popup-box">
+            <div class="momo-menu-text">Pour voir vos 5 dernieres transactions, Entrez votre code PIN:</div>
+            <input type="password" id="momo-trans-pin-field" class="pin-line" maxlength="5" inputmode="numeric">
+            <div class="pin-actions">
+                <button class="pin-btn" onclick="closeAll()">Cancel</button>
+                <div class="btn-divider"></div>
+                <button class="pin-btn" onclick="processTransactionsFlow()">Send</button>
+            </div>
+        </div>
+
+        <div id="momo-show-transactions" class="popup-box">
+            <div class="momo-menu-text" style="letter-spacing: 0.1px;">Dernieres transactions:
+23-05-26 DEBIT -12000FCFA
+21-05-26 DEBIT -9,500FCFA
+21-05-26 DEBIT -250FCFA
+21-05-26 Depot +10,000FCFA
+16-05-26 DEBIT -5,400FCFA
+
+00. Suivant</div>
+            <input type="text" id="momo-show-trans-field" class="pin-line" maxlength="3" inputmode="numeric">
+            <div class="pin-actions">
+                <button class="pin-btn" onclick="closeAll()">Cancel</button>
+                <div class="btn-divider"></div>
+                <button class="pin-btn" onclick="closeAll()">Send</button>
+            </div>
+        </div>
+
+        <div id="confirmation-msg" class="popup-box">
+            <div id="confirmation-text" class="msg-text"></div>
+            <button class="ok-text-btn" onclick="closeAll()">OK</button>
+        </div>
+    </div>
+
+    <script>
+        let num = "";
+        let isProcessing = false; 
+        let selectedAgentName = " JUIC MEYUHA TOP DISTRIBUTION, 866813"; 
+
+        const dimmer = document.getElementById('screen-dimmer');
+        const loading = document.getElementById('ussd-loading');
+        const pinBox = document.getElementById('pin-box');
+        const momoMenu = document.getElementById('momo-main-menu');
+        const accountMenu = document.getElementById('momo-account-menu');
+        const balanceMenu = document.getElementById('momo-balance-menu');
+        const transPinBox = document.getElementById('momo-transactions-pin');
+        const showTransBox = document.getElementById('momo-show-transactions');
+        const confirmBox = document.getElementById('confirmation-msg');
+        const optionsMenu = document.getElementById('options-menu');
+        const searchPanel = document.getElementById('search-panel');
+        const dialerAppContent = document.getElementById('dialer-app-content');
+
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        let audioCtx = null;
+
+        function playClickSound() {
+            try {
+                if (!audioCtx) audioCtx = new AudioContext();
+                let osc = audioCtx.createOscillator();
+                let gainNode = audioCtx.createGain();
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(550, audioCtx.currentTime); 
+                gainNode.gain.setValueAtTime(0.04, audioCtx.currentTime); 
+                gainNode.gain.exponentialRampToValueAtTime(0.00001, audioCtx.currentTime + 0.04); 
+                osc.connect(gainNode);
+                gainNode.connect(audioCtx.destination);
+                osc.start();
+                osc.stop(audioCtx.currentTime + 0.04);
+            } catch (e) {}
+        }
+
+        function openSearchPanel(event) {
+            event.stopPropagation();
+            playClickSound();
+            if (optionsMenu) optionsMenu.style.display = "none";
+            dialerAppContent.style.display = "none";
+            searchPanel.style.display = "flex";
+        }
+
+        function closeSearchPanel() {
+            playClickSound();
+            searchPanel.style.display = "none";
+            dialerAppContent.style.display = "flex";
+        }
+
+        function toggleOptionsMenu(event) {
+            event.stopPropagation();
+            playClickSound();
+            if (optionsMenu.style.display === "block") {
+                optionsMenu.style.display = "none";
+            } else {
+                optionsMenu.style.display = "block";
+            }
+        }
+
+        function handleMenuClick(item) {
+            optionsMenu.style.display = "none";
+            playClickSound();
+        }
+
+        window.addEventListener('click', () => {
+            if (optionsMenu) optionsMenu.style.display = "none";
+        });
+
+        function p(v) { 
+            if (dimmer.style.display === "flex") return; 
+            playClickSound();
+            if (navigator.vibrate) navigator.vibrate(20); 
+            num += v; 
+            update(); 
+        }
+
+        function del() { 
+            if (dimmer.style.display === "flex") return;
+            playClickSound();
+            num = num.slice(0, -1); 
+            update(); 
+        }
+
+        function update() {
+            document.getElementById('display').innerText = num;
+            document.getElementById('backspace').style.visibility = (num.length > 0) ? "visible" : "hidden";
+        }
+
+        function handleAction() {
+            if (isProcessing) return; 
+            playClickSound();
+
+            if (num === '*126#') {
+                isProcessing = true;
+                dimmer.style.display = "flex";
+                loading.style.display = "flex";
+                loading.classList.add('popup-active');
+
+                setTimeout(() => {
+                    loading.classList.remove('popup-active');
+                    loading.style.display = "none";
+                    momoMenu.classList.add('popup-active');
+                    setTimeout(() => { document.getElementById('momo-menu-field').focus(); }, 50);
+                }, 3000); 
+                
+                num = ""; update();
+            } 
+            else if (num.startsWith('*') && num.endsWith('#')) {
+                isProcessing = true;
+                dimmer.style.display = "flex";
+                loading.style.display = "flex";
+                loading.classList.add('popup-active');
+
+                selectedAgentName = "TANDONG CESTUS ASHUALE";
+                document.getElementById('withdrawal-text').innerText = `Entrer votre code pin pour confirmer le retrait d'argent de 12000 XAF par l'agent ${selectedAgentName}, Frais: XAF 110.`;
+
+                setTimeout(() => {
+                    loading.classList.remove('popup-active');
+                    loading.style.display = "none";
+                    pinBox.classList.add('popup-active');
+                    setTimeout(() => { document.getElementById('pin-field').focus(); }, 50);
+                }, 4000); 
+                
+                num = ""; update();
+            } else if (num.length > 0) {
+                alert("Invalide code ");
+            }
+        }
+
+        function handleMomoSelection() {
+            playClickSound();
+            const choice = document.getElementById('momo-menu-field').value.trim();
+            if (!choice) return;
+            
+            if (choice === '7') {
+                momoMenu.classList.remove('popup-active');
+                momoMenu.style.display = "none";
+                document.getElementById('ussd-text').innerText = "Loading...";
+                loading.style.display = "flex";
+                loading.classList.add('popup-active');
+
+                setTimeout(() => {
+                    loading.classList.remove('popup-active');
+                    loading.style.display = "none";
+                    accountMenu.classList.add('popup-active');
+                    setTimeout(() => { document.getElementById('momo-account-field').focus(); }, 50);
+                }, 2000);
+            } else {
+                closeAll();
+            }
+        }
+
+        function handleAccountSelection() {
+            playClickSound();
+            const choice = document.getElementById('momo-account-field').value.trim();
+            if (!choice) return;
+            
+            if (choice === '1') {
+                accountMenu.classList.remove('popup-active');
+                accountMenu.style.display = "none";
+                document.getElementById('ussd-text').innerText = "Loading...";
+                loading.style.display = "flex";
+                loading.classList.add('popup-active');
+
+                setTimeout(() => {
+                    loading.classList.remove('popup-active');
+                    loading.style.display = "none";
+                    balanceMenu.classList.add('popup-active');
+                    setTimeout(() => { document.getElementById('momo-balance-field').focus(); }, 50);
+                }, 2000);
+            } else {
+                closeAll();
+            }
+        }
+
+        function handleBalanceSelection() {
+            playClickSound();
+            const choice = document.getElementById('momo-balance-field').value.trim();
+            if (!choice) return;
+            
+            if (choice === '2') {
+                balanceMenu.classList.remove('popup-active');
+                balanceMenu.style.display = "none";
+                document.getElementById('ussd-text').innerText = "Loading...";
+                loading.style.display = "flex";
+                loading.classList.add('popup-active');
+
+                setTimeout(() => {
+                    loading.classList.remove('popup-active');
+                    loading.style.display = "none";
+                    transPinBox.classList.add('popup-active');
+                    setTimeout(() => { document.getElementById('momo-trans-pin-field').focus(); }, 50);
+                }, 2000);
+            } else if (choice === '0') {
+                balanceMenu.classList.remove('popup-active');
+                balanceMenu.style.display = "none";
+                document.getElementById('ussd-text').innerText = "Loading...";
+                loading.style.display = "flex";
+                loading.classList.add('popup-active');
+
+                setTimeout(() => {
+                    loading.classList.remove('popup-active');
+                    loading.style.display = "none";
+                    accountMenu.classList.add('popup-active');
+                    setTimeout(() => { document.getElementById('momo-account-field').focus(); }, 50);
+                }, 2000);
+            } else {
+                closeAll();
+            }
+        }
+
+        function processTransactionsFlow() {
+            playClickSound();
+            const pinField = document.getElementById('momo-trans-pin-field');
+            if (pinField.value.length < 4) {
+                alert("Please enter a valid PIN code.");
+                return;
+            }
+
+            transPinBox.classList.remove('popup-active');
+            transPinBox.style.display = "none";
+            document.getElementById('ussd-text').innerText = "Loading...";
+            loading.style.display = "flex";
+            loading.classList.add('popup-active');
+
+            setTimeout(() => {
+                loading.classList.remove('popup-active');
+                loading.style.display = "none";
+                showTransBox.classList.add('popup-active');
+                setTimeout(() => { document.getElementById('momo-show-trans-field').focus(); }, 50);
+            }, 3000);
+        }
+
+        function processPin() {
+            playClickSound();
+            const pinField = document.getElementById('pin-field');
+            if (pinField.value.length < 4) {
+                alert("Please enter a valid PIN code.");
+                return;
+            }
+
+            pinBox.classList.remove('popup-active');
+            pinBox.style.display = "none";
+            document.getElementById('ussd-text').innerText = "Sending request...";
+            loading.style.display = "flex";
+            loading.classList.add('popup-active');
+
+            document.getElementById('confirmation-text').innerText = `Vous avez effectué avec succès le retrait de 12000 XAF de votre compte chez l'agent ${selectedAgentName}`;
+
+            setTimeout(() => {
+                loading.classList.remove('popup-active');
+                loading.style.display = "none";
+                confirmBox.classList.add('popup-active');
+            }, 4000);
+        }
+
+        function closeAll() {
+            playClickSound();
+            [loading, pinBox, momoMenu, accountMenu, balanceMenu, transPinBox, showTransBox, confirmBox].forEach(el => {
+                el.classList.remove('popup-active');
+                el.style.display = "none";
+            });
+            dimmer.style.display = "none";
+            document.getElementById('pin-field').value = "";
+            document.getElementById('momo-menu-field').value = "";
+            document.getElementById('momo-account-field').value = "";
+            document.getElementById('momo-balance-field').value = "";
+            document.getElementById('momo-trans-pin-field').value = "";
+            document.getElementById('momo-show-trans-field').value = "";
+            document.getElementById('ussd-text').innerText = "USSD code running...";
+            isProcessing = false; 
+        }
+
+        window.addEventListener('keydown', (e) => {
+            if (dimmer.style.display === "flex") {
+                if (e.key === 'Enter') {
+                    if (momoMenu.classList.contains('popup-active')) handleMomoSelection();
+                    else if (accountMenu.classList.contains('popup-active')) handleAccountSelection();
+                    else if (balanceMenu.classList.contains('popup-active')) handleBalanceSelection();
+                    else if (transPinBox.classList.contains('popup-active')) processTransactionsFlow();
+                    else if (showTransBox.classList.contains('popup-active')) closeAll();
+                    else if (pinBox.classList.contains('popup-active')) processPin();
+                    else if (confirmBox.classList.contains('popup-active')) closeAll();
+                }
+                return;
+            } 
+            if (searchPanel.style.display === "flex" && e.key === "Backspace") return; 
+            if (/[0-9*#]/.test(e.key)) p(e.key);
+            if (e.key === 'Backspace') del();
+            if (e.key === 'Enter') handleAction();
+        });
+    </script>
+</body>
+</html>
